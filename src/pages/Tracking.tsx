@@ -171,11 +171,17 @@ function Tracking() {
   const todayIso = new Date().toISOString().slice(0, 10);
 
   return (
-    <Box sx={{ display: "flex", gap: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 3,
+        flexDirection: { xs: "column", md: "row" }
+      }}
+    >
       <Paper
         sx={{
           p: 2,
-          width: 260,
+          width: { xs: "100%", md: 260 },
           flexShrink: 0,
           display: "flex",
           flexDirection: "column",
@@ -232,7 +238,14 @@ function Tracking() {
         </Stack>
       </Paper>
 
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3
+        }}
+      >
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" mb={2}>
             Project
@@ -380,7 +393,7 @@ function Tracking() {
       <Paper
         sx={{
           p: 2,
-          width: 260,
+          width: { xs: "100%", md: 260 },
           flexShrink: 0,
           display: "flex",
           flexDirection: "column",

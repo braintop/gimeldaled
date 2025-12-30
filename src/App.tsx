@@ -1,7 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
-import { AppBar, Box, Button, Container, IconButton, Toolbar, Typography } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
+  useMediaQuery
+} from "@mui/material";
 import { Link as RouterLink, Navigate, Route, Routes } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
+import MenuIcon from "@mui/icons-material/Menu";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import Home from "./pages/Home";
 import Tracking from "./pages/Tracking";
@@ -19,6 +31,8 @@ function App() {
   const [authReady, setAuthReady] = useState(false);
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [navAnchorEl, setNavAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
@@ -48,6 +62,14 @@ function App() {
     } catch (err) {
       console.error("Logout failed", err);
     }
+  };
+
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setNavAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseNavMenu = () => {
+    setNavAnchorEl(null);
   };
 
   const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -143,38 +165,138 @@ function App() {
                 {theme.palette.mode === "dark" ? "🌻" : "🌜"}
               </span>
             </IconButton>
-            {user && (
+            {/* Desktop navigation */}
+            {!isMobile && (
               <>
-                <Button color="inherit" component={RouterLink} to="/">
-                  Home
-                </Button>
-                <Button color="inherit" component={RouterLink} to="/tracking">
-                  Tracking
-                </Button>
-                {(role === "teacher" || role === "admin") && (
-                  <Button color="inherit" component={RouterLink} to="/teacher">
-                    Teacher
-                  </Button>
+                {user && (
+                  <>
+                    <Button color="inherit" component={RouterLink} to="/">
+                      Home
+                    </Button>
+                    <Button color="inherit" component={RouterLink} to="/tracking">
+                      Tracking
+                    </Button>
+                    {(role === "teacher" || role === "admin") && (
+                      <Button color="inherit" component={RouterLink} to="/teacher">
+                        Teacher
+                      </Button>
+                    )}
+                    {user.email?.toLowerCase() === "asaf.amir@gmail.com" &&
+                      role === "admin" && (
+                        <Button
+                          color="inherit"
+                          component={RouterLink}
+                          to="/permissions"
+                        >
+                          Permissions
+                        </Button>
+                      )}
+                    <Button color="inherit" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </>
                 )}
-                {user.email?.toLowerCase() === "asaf.amir@gmail.com" && role === "admin" && (
-                  <Button color="inherit" component={RouterLink} to="/permissions">
-                    Permissions
-                  </Button>
+
+                {!user && (
+                  <>
+                    <Button color="inherit" component={RouterLink} to="/login">
+                      Login
+                    </Button>
+                    <Button color="inherit" component={RouterLink} to="/register">
+                      Register
+                    </Button>
+                  </>
                 )}
-                <Button color="inherit" onClick={handleLogout}>
-                  Logout
-                </Button>
               </>
             )}
 
-            {!user && (
+            {/* Mobile navigation */}
+            {isMobile && (
               <>
-                <Button color="inherit" component={RouterLink} to="/login">
-                  Login
-                </Button>
-                <Button color="inherit" component={RouterLink} to="/register">
-                  Register
-                </Button>
+                <IconButton
+                  size="large"
+                  edge="end"
+                  color="inherit"
+                  onClick={handleOpenNavMenu}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={navAnchorEl}
+                  open={Boolean(navAnchorEl)}
+                  onClose={handleCloseNavMenu}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right"
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right"
+                  }}
+                >
+                  {user ? (
+                    <>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/"
+                        onClick={handleCloseNavMenu}
+                      >
+                        Home
+                      </MenuItem>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/tracking"
+                        onClick={handleCloseNavMenu}
+                      >
+                        Tracking
+                      </MenuItem>
+                      {(role === "teacher" || role === "admin") && (
+                        <MenuItem
+                          component={RouterLink}
+                          to="/teacher"
+                          onClick={handleCloseNavMenu}
+                        >
+                          Teacher
+                        </MenuItem>
+                      )}
+                      {user.email?.toLowerCase() === "asaf.amir@gmail.com" &&
+                        role === "admin" && (
+                          <MenuItem
+                            component={RouterLink}
+                            to="/permissions"
+                            onClick={handleCloseNavMenu}
+                          >
+                            Permissions
+                          </MenuItem>
+                        )}
+                      <MenuItem
+                        onClick={() => {
+                          handleCloseNavMenu();
+                          void handleLogout();
+                        }}
+                      >
+                        Logout
+                      </MenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/login"
+                        onClick={handleCloseNavMenu}
+                      >
+                        Login
+                      </MenuItem>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/register"
+                        onClick={handleCloseNavMenu}
+                      >
+                        Register
+                      </MenuItem>
+                    </>
+                  )}
+                </Menu>
               </>
             )}
           </Box>

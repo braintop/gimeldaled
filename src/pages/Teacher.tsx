@@ -140,10 +140,16 @@ function Teacher() {
   );
 
   return (
-    <Box sx={{ display: "flex", gap: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 3,
+        flexDirection: { xs: "column", md: "row" }
+      }}
+    >
       <Paper
         sx={{
-          width: 320,
+          width: { xs: "100%", md: 320 },
           flexShrink: 0,
           p: 2,
           display: "flex",
@@ -157,7 +163,13 @@ function Teacher() {
           Missing this week: {missingThisWeekCount}
         </Typography>
         <Divider sx={{ my: 1 }} />
-        <List dense sx={{ maxHeight: 500, overflowY: "auto" }}>
+        <List
+          dense
+          sx={{
+            maxHeight: { xs: 260, md: 500 },
+            overflowY: "auto"
+          }}
+        >
           {rows.map((row) => (
             <ListItem key={row.student.uid} disablePadding>
               <ListItemButton
@@ -187,7 +199,14 @@ function Teacher() {
         </List>
       </Paper>
 
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3
+        }}
+      >
         <Paper sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
             Student overview

@@ -68,6 +68,7 @@ function Teacher() {
   const [reports, setReports] = useState<WeeklyReport[]>([]);
   const [plans, setPlans] = useState<FuturePlanItem[]>([]);
   const [savingNotesId, setSavingNotesId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -140,6 +141,15 @@ function Teacher() {
     [rows]
   );
 
+  const filteredRows = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return rows;
+    return rows.filter((row) => {
+      const fullName = `${row.student.firstName} ${row.student.lastName}`.toLowerCase();
+      return fullName.includes(term);
+    });
+  }, [rows, searchTerm]);
+
   return (
     <Box
       sx={{
@@ -163,6 +173,13 @@ function Teacher() {
         <Typography variant="body2" color="text.secondary">
           Missing this week: {missingThisWeekCount}
         </Typography>
+        <TextField
+          size="small"
+          placeholder="Search by name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ mt: 1 }}
+        />
         <Divider sx={{ my: 1 }} />
         <List
           dense
@@ -171,7 +188,7 @@ function Teacher() {
             overflowY: "auto"
           }}
         >
-          {rows.map((row) => (
+          {filteredRows.map((row) => (
             <ListItem key={row.student.uid} disablePadding>
               <ListItemButton
                 selected={selected?.student.uid === row.student.uid}

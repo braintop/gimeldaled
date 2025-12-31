@@ -5,6 +5,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   collection,
   getDocs,
   addDoc,
@@ -313,6 +314,11 @@ export async function updateFuturePlanItemDescription(
     description: data.description,
     tillDate: data.tillDate
   });
+}
+
+export async function deleteFuturePlanItem(id: string): Promise<void> {
+  const ref = doc(db, "futurePlanItems", id);
+  await deleteDoc(ref);
 }
 
 export async function updateInstructorNotes(

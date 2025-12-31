@@ -22,8 +22,10 @@ import {
   type WeeklyReport,
   createFuturePlanItem,
   updateFuturePlanItemDescription,
-  updateStudentProject
+  updateStudentProject,
+  deleteFuturePlanItem
 } from "../api/firebase";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 function Tracking() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -165,6 +167,18 @@ function Tracking() {
       });
     } finally {
       setSavingPlanId(null);
+    }
+  };
+
+  const handleDeletePlanItem = async (id: string) => {
+    // עדכון מהיר ב־UI
+    setPlanItems((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await deleteFuturePlanItem(id);
+    } catch (e) {
+      // במקרה של שגיאה אפשר לטעון שוב מהשרת בעתיד
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   };
 
@@ -416,14 +430,14 @@ function Tracking() {
         <Divider />
 
         <Stack spacing={1}>
-          {planItems.map((item) => (
+          {planItems.map((item, index) => (
             <Paper
               key={item.id}
               variant="outlined"
               sx={{ p: 1.5, borderRadius: 1 }}
             >
               <Typography variant="body2" fontWeight={600} gutterBottom>
-                Week {item.weekIndex}
+                Week {index + 1}
               </Typography>
               <TextField
                 value={item.description}
@@ -461,6 +475,13 @@ function Tracking() {
                   }
                   sx={{ flex: 1 }}
                 />
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleDeletePlanItem(item.id)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
                 <Button
                   size="small"
                   variant="contained"

@@ -32,6 +32,7 @@ function Tracking() {
   const [projectTitle, setProjectTitle] = useState("");
   const [projectProposalUrl, setProjectProposalUrl] = useState("");
   const [savingProject, setSavingProject] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(true);
 
   const [weekForm, setWeekForm] = useState<WeeklyReportPayload>({
     weekStartDate: new Date(),
@@ -57,6 +58,9 @@ function Tracking() {
         setProfile(p);
         setProjectTitle(p.projectTitle);
         setProjectProposalUrl(p.projectProposalUrl);
+        if (p.projectTitle || p.projectProposalUrl) {
+          setIsEditingProject(false);
+        }
       }
 
       const r = await listWeeklyReportsForStudent(user.uid);
@@ -83,6 +87,7 @@ function Tracking() {
           ? { ...prev, projectTitle, projectProposalUrl }
           : (prev as StudentProfile | null)
       );
+      setIsEditingProject(false);
     } finally {
       setSavingProject(false);
     }
@@ -264,27 +269,88 @@ function Tracking() {
           <Typography variant="h6" mb={2}>
             Project
           </Typography>
-          <Stack spacing={2}>
-            <TextField
-              label="Project Title"
-              value={projectTitle}
-              onChange={(e) => setProjectTitle(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Project Proposal URL"
-              value={projectProposalUrl}
-              onChange={(e) => setProjectProposalUrl(e.target.value)}
-              fullWidth
-            />
-            <Button
-              variant="contained"
-              onClick={handleSaveProject}
-              disabled={savingProject}
-            >
-              {savingProject ? "Saving..." : "Save Project"}
-            </Button>
-          </Stack>
+          {isEditingProject ? (
+            <Stack spacing={2}>
+              <TextField
+                label="Project Title"
+                value={projectTitle}
+                onChange={(e) => setProjectTitle(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Project Proposal URL"
+                value={projectProposalUrl}
+                onChange={(e) => setProjectProposalUrl(e.target.value)}
+                fullWidth
+              />
+              <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    // ביטול שינוי – חזרה לערכים מהפרופיל האחרון
+                    if (profile) {
+                      setProjectTitle(profile.projectTitle);
+                      setProjectProposalUrl(profile.projectProposalUrl);
+                      if (profile.projectTitle || profile.projectProposalUrl) {
+                        setIsEditingProject(false);
+                      }
+                    } else {
+                      setProjectTitle("");
+                      setProjectProposalUrl("");
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveProject}
+                  disabled={savingProject}
+                >
+                  {savingProject ? "Saving..." : "Save Project"}
+                </Button>
+              </Box>
+            </Stack>
+          ) : (
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {projectTitle || "Untitled project"}
+              </Typography>
+              <Box>
+                <Typography variant="body2" component="span">
+                  <strong>Proposal URL:</strong>{" "}
+                </Typography>
+                {projectProposalUrl ? (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    href={projectProposalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ ml: 1 }}
+                  >
+                    Open proposal
+                  </Button>
+                ) : (
+                  <Typography variant="body2" component="span">
+                    -
+                  </Typography>
+                )}
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setIsEditingProject(true)}
+                >
+                  Edit
+                </Button>
+              </Box>
+            </Stack>
+          )}
         </Paper>
 
         {showWeekForm && (

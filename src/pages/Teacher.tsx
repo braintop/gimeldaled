@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Chip,
   Divider,
   LinearProgress,
@@ -223,10 +224,23 @@ function Teacher() {
                 <strong>Project:</strong>{" "}
                 {selected.student.projectTitle || "Not set yet"}
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
                 <strong>Proposal URL:</strong>{" "}
-                {selected.student.projectProposalUrl || "-"}
+                {selected.student.projectProposalUrl ? " " : "-"}
               </Typography>
+              {selected.student.projectProposalUrl && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  href={selected.student.projectProposalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ mt: 0.5 }}
+                >
+                  Open proposal
+                </Button>
+              )}
             </>
           ) : (
             <Typography variant="body2">Select a student from the list.</Typography>

@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /// Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userDoc(request.auth.uid).data.role == 'admin';
+    }
+
+    function isTeacher() {
+      let role = userDoc(request.auth.uid).data.role;
+      return isSignedIn() && (role == 'teacher' || role == 'admin');
+    }
+
+    /// users collection – auth + roles
+    match /users/{uid} {
+      // כל אחד קורא את עצמו, אדמין יכול לקרוא כולם
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+
+      // יצירה – בזמן רישום משתמש חדש
+      // סטודנט רגיל יכול ליצור רק עם role=student (או בלי שדה role בכלל)
+      // האדמין הראשי יכול ליצור את עצמו עם role=admin בפעם הראשונה
+      allow create: if isSignedIn() &&
+        request.auth.uid == uid &&
+        (
+          !('role' in request.resource.data) ||
+          request.resource.data.role == 'student' ||
+          (
+            request.auth.token.email == 'asaf.amir@gmail.com' &&
+            request.resource.data.role == 'admin'
+          )
+        );
+
+      // עדכון/מחיקה – רק אדמין (כדי למנוע שינוי role ע"י סטודנט)
+      allow update, delete: if isAdmin();
+    }
+
+    /// students collection – פרופיל סטודנט
+    match /students/{uid} {
+      // קריאה: הסטודנט את עצמו, או מורה/אדמין
+      allow read: if isSignedIn() &&
+        (request.auth.uid == uid || isTeacher());
+
+      // יצירה: בזמן רישום – הסטודנט יוצר את המסמך שלו
+      allow create: if isSignedIn() && request.auth.uid == uid;
+
+      // עדכון:
+      allow update: if
+        // סטודנט יכול לעדכן רק את שדות הפרויקט שלו
+        (isSignedIn() &&
+         request.auth.uid == uid &&
+         !isTeacher() &&
+         request.resource.data.diff(resource.data).changedKeys()
+           .hasOnly(['projectTitle', 'projectProposalUrl'])) ||
+
+        // מורה/אדמין יכולים לעדכן כל שדה
+        isTeacher();
+    }
+
+    /// weeklyReports collection – דיווחים שבועיים
+    match /weeklyReports/{reportId} {
+      // יצירת דיווח – רק הסטודנט של עצמו
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.studentId;
+
+      // קריאה – הסטודנט את שלו, או מורה/אדמין
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.studentId || isTeacher());
+
+      // עדכון:
+      allow update: if
+        // סטודנט מעדכן רק את התוכן שלו, בלי לגעת ב־instructorNotesText
+        (isSignedIn() &&
+         request.auth.uid == resource.data.studentId &&
+         request.resource.data.instructorNotesText
+           == resource.data.instructorNotesText &&
+         request.resource.data.diff(resource.data).changedKeys()
+           .hasOnly([
+             'weekStartDate',
+             'weeklyStatusText',
+             'blockersText',
+             'nextWeekDemoText',
+             'nextWeekTasksText'
+           ])) ||
+
+        // מורה/אדמין מעדכנים רק הערות מדריך
+        (isTeacher() &&
+         request.resource.data.diff(resource.data).changedKeys()
+           .hasOnly(['instructorNotesText']));
+    }
+
+    /// futurePlanItems collection – תכנית קדימה
+    match /futurePlanItems/{itemId} {
+      // קריאה – הסטודנט של עצמו או מורה/אדמין
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.studentId || isTeacher());
+
+      // יצירה – רק הסטודנט של עצמו
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.studentId;
+
+      // עדכון/מחיקה – רק הסטודנט של עצמו
+      allow update, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.studentId;
+    }
+  }
+}
+
+
